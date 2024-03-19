@@ -10,19 +10,26 @@ import {
   Query,
   Body,
   Headers,
-  UseGuards,
   UseInterceptors,
   ParseUUIDPipe,
   HttpException,
   HttpStatus,
   NotFoundException,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  UsePipes,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Request, Response } from 'express';
-import { AuthGuard } from 'src/guards/auth.guard';
+
 import { DateAdderInterceptor } from 'src/interceptors/date-adder.interceptor';
 import { UsersDbService } from './usersDb.service';
 import { CreateUserDto } from './dtos/CreateUser.dto';
+import { CloudinaryService } from './cloudinary.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { MinSizeValidatorPipe } from 'src/pipes/min-size-validator.pipe';
 
 @Controller('users')
 // @UseGuards(AuthGuard)
@@ -30,6 +37,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly usersDbService: UsersDbService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   @Get()
@@ -49,10 +57,28 @@ export class UsersController {
     return 'Este endpoint retorna el perfil del usuario';
   }
 
-  @Get('profile/images')
-  @UseGuards(AuthGuard)
-  getUserImages() {
-    return 'Este endpoint retorna las imágenes del usuario';
+  @Post('profile/images')
+  @UseInterceptors(FileInterceptor('image'))
+  @UsePipes(MinSizeValidatorPipe)
+  // @UseGuards(AuthGuard)
+  getUserImages(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 100000,
+            message: 'El archivo debe ser menor a 100kb',
+          }),
+          new FileTypeValidator({
+            fileType: /(jpg|jpeg|png|webp)$/,
+          }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+  ) {
+    // return this.cloudinaryService.upladImage(file);
+    return file;
   }
 
   // @HttpCode(418)
