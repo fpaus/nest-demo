@@ -16,14 +16,18 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Request, Response } from 'express';
-import { User } from './user.interface';
+import { User as UserEntity } from './users.entity';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { DateAdderInterceptor } from 'src/interceptors/date-adder.interceptor';
+import { UsersDbService } from './usersDb.service';
 
 @Controller('users')
 @UseGuards(AuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly usersDbService: UsersDbService,
+  ) {}
 
   @Get()
   getUsers(@Query('name') name?: string) {
@@ -73,9 +77,12 @@ export class UsersController {
 
   @Post()
   @UseInterceptors(DateAdderInterceptor)
-  createUser(@Body() user: User, @Req() request: Request & { now: string }) {
+  createUser(
+    @Body() user: UserEntity,
+    @Req() request: Request & { now: string },
+  ) {
     console.log('dentro del endoint:', request.now);
-    return this.usersService.createUser(user);
+    return this.usersDbService.saveUser({ ...user, createdAt: request.now });
   }
 
   @Put()
