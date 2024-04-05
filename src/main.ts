@@ -5,6 +5,7 @@ import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { auth } from 'express-openid-connect';
 import { config as auth0Config } from './config/auth0.config';
 // import { AuthGuard } from './guards/auth.guard';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -27,6 +28,18 @@ async function bootstrap() {
     }),
   );
   app.use(loggerGlobal);
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Demo Nest')
+    .setDescription(
+      `Esta es una API construida con Nest para ser empleada en las demos del módulo 4 de la especialidad Backend de la carrera Fullstack Developer de Henry`,
+    )
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api', app, document);
   await app.listen(3000);
 }
+
 bootstrap();
