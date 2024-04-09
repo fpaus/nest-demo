@@ -11,7 +11,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   // app.useGlobalGuards(new AuthGuard());
   //app.useGlobalInterceptors(new MyInterceptor())
-  app.use(auth(auth0Config));
+  //app.use(auth(auth0Config));
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
